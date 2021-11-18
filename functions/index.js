@@ -20,6 +20,7 @@
          dbList.list({include_docs: true});
          
          let q;
+         let response;
          if (params.state) {
              q = {
                  selector: {
@@ -28,6 +29,17 @@
                  },
                  fields: [ "id", "city", "state", "st", "address", "zip", "lat", "long" ]
              };
+             response = await dbList.find(q);
+             if (response.bookmark === 'nil') {
+                 return { 
+                     "headers": { 
+                         "Content-Type": "application/json" 
+                         
+                     }, 
+                     "statusCode": "404", 
+                     "error": "The state does not exist"
+                 }
+             }
          } else {
              q = {
                  selector: {
@@ -35,13 +47,11 @@
                  },
                  fields: [ "id", "city", "state", "st", "address", "zip", "lat", "long" ]
              };
+             response = await dbList.find(q);
          }
          
-         const response = await dbList.find(q);
- 
          return response;
      } catch (error) {
          return { error: error.description };
      }    
  }
- 
