@@ -9,24 +9,41 @@
 #
 from cloudant.client import Cloudant
 from cloudant.error import CloudantException
+import sys
 import requests
-
-
+import json
+    
 def main(dict):
-    databaseName = "dealerships"
-
+    aList = []
     try:
         client = Cloudant.iam(
-            account_name=dict["COUCH_USERNAME"],
-            api_key=dict["IAM_API_KEY"],
-            connect=True,
+            account_name = dict['cloudant_username'],
+            api_key = dict['cloudant_apikey'],
+            connect = True,
         )
-        print("Databases: {0}".format(client.all_dbs()))
+        my_database = client['reviews']
+        for doc in my_database:
+            print(dict)
+            if "dealerId" in dict:
+                if dict["dealerId"] == doc["id"]:
+                    aList.append(doc)
     except CloudantException as ce:
         print("unable to connect")
         return {"error": ce}
     except (requests.exceptions.RequestException, ConnectionResetError) as err:
         print("connection error")
         return {"error": err}
+    
+    if len(aList) < 1:
+        return { "error": "dealerId does not exist" }
 
-    return {"dbs": client.all_dbs()}
+    # print(aList)
+    # return { "reviews": json.dumps(aList, indent = 2) }
+    
+    status = 200
+    headers = { "Content-Type": "application/json" }
+    body = json.dumps({ "reviews": aList }, indent = 2)
+    
+    return { "statusCode": status, "headers": headers, "body": body }
+
+    
