@@ -14,7 +14,12 @@ import requests
 import json
     
 def main(dict):
+    dealerId = dict.get('dealerId')
+    if(dealerId is None):
+        return { 'message': 'dealerId is required', 'statusCode': 404 }
+    
     aList = []
+
     try:
         client = Cloudant.iam(
             account_name = dict['cloudant_username'],
@@ -23,27 +28,20 @@ def main(dict):
         )
         my_database = client['reviews']
         for doc in my_database:
-            print(dict)
-            if "dealerId" in dict:
-                if dict["dealerId"] == doc["id"]:
-                    aList.append(doc)
+            if int(dealerId) == doc.get('id'):
+                aList.append(doc)
     except CloudantException as ce:
         print("unable to connect")
-        return {"error": ce}
+        return { 'message': ce}
     except (requests.exceptions.RequestException, ConnectionResetError) as err:
         print("connection error")
-        return {"error": err}
+        return { 'message': err}
     
+    print(len(aList))
     if len(aList) < 1:
-        return { "error": "dealerId does not exist" }
-
-    # print(aList)
-    # return { "reviews": json.dumps(aList, indent = 2) }
+        return { 'message': 'reviews for dealerId do not exist', 'statusCode': 404 }
     
-    status = 200
-    headers = { "Content-Type": "application/json" }
-    body = json.dumps({ "reviews": aList }, indent = 2)
-    
-    return { "statusCode": status, "headers": headers, "body": body }
-
-    
+    return { 
+        'statusCode': 200, 
+        'body': { "reviews": aList } 
+    }
