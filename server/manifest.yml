@@ -1,11 +1,11 @@
   applications:
-  - name: 424242randomDust242424
+  - name: 42424242randomDust24242424
     routes:
-      - route: 424242randomDust242424.mybluemix.net
+      - route: 42424242randomDust24242424.mybluemix.net
     memory: 128M
     buildpack: python_buildpack
-  - name: 424242randomDust242424-nginx
+  - name: 42424242randomDust24242424-nginx
     routes:
-      - route: 424242randomDust242424.mybluemix.net/static
+      - route: 42424242randomDust24242424.mybluemix.net/static
     memory: 128M
     buildpack: staticfile_buildpack
