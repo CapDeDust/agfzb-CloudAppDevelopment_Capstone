@@ -2,8 +2,9 @@ from django.shortcuts import render
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render, redirect
+from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 # from .models import related models
-# from .restapis import related methods
+from .restapis import get_dealers_from_cf, get_dealer_by_id_from_cf, get_dealer_reviews_from_cf, post_request
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
 from datetime import datetime
@@ -108,17 +109,69 @@ def registration_request(request):
             return render(request, 'djangoapp/registration.html', context)
 
 # Update the `get_dealerships` view to render the index page with a list of dealerships
+# def get_dealerships(request):
+#     context = {}
+#     if request.method == "GET":
+#         return render(request, 'djangoapp/index.html', context)
 def get_dealerships(request):
-    context = {}
     if request.method == "GET":
-        return render(request, 'djangoapp/index.html', context)
+        url = "https://2f53ab0c.us-south.apigw.appdomain.cloud/dealerships/api/dealership"
+        # Get dealers from the URL
+        dealerships = get_dealers_from_cf(url)
+        # Concat all dealer's short name
+        dealer_names = ' '.join([dealer.short_name for dealer in dealerships])
+        # Return a list of dealer short name
+        return HttpResponse(dealer_names)
 
+def get_dealerships_by_id(request):
+    if request.method == "GET":
+        url = "https://2f53ab0c.us-south.apigw.appdomain.cloud/dealerships/api/dealership?id="
+        # Get dealers from the URL
+        dealerships = get_dealer_by_id_from_cf(url, 4)
+        # Concat all dealer's short name
+        dealer_names = ' '.join([dealer.short_name for dealer in dealerships])
+        # Return a list of dealer short name
+        return HttpResponse(dealer_names)
 
-# Create a `get_dealer_details` view to render the reviews of a dealer
-# def get_dealer_details(request, dealer_id):
-# ...
+def get_dealer_details(request, dealer_id):
+    if request.method == "GET":
+        url = "https://2f53ab0c.us-south.apigw.appdomain.cloud/review/api/review"
+        # Get reviews from the URL
+        reviews = get_dealer_reviews_from_cf(url, dealer_id)
+        reviews_comments = ' '.join([review.review for review in reviews])
+        # TODO issues with 404 not found when calling ibm nlu
+        # print('about to print reviews')
+        # print(reviews.__str__)
+        # reviews_sentiments = ' '.join([review.sentiment for review in reviews])
+        return HttpResponse(reviews_comments)
+        # print('about to print review sentiments')
+        # print(reviews_sentiments)
+        # return HttpResponse(reviews_sentiments)
 
 # Create a `add_review` view to submit a review
 # def add_review(request, dealer_id):
 # ...
-
+@csrf_exempt
+def add_review(request, dealer_id):
+    context = {}
+    if request.method == "POST":
+        username = request.POST['username']
+        password = request.POST['psw']
+        # Try to check if provide credential can be authenticated
+        user = authenticate(username=username, password=password)
+        if user is not None:
+            url = "https://2f53ab0c.us-south.apigw.appdomain.cloud/review/api/review"
+            review = dict()
+            review["time"] = datetime.utcnow().isoformat()
+            review["dealership"] = 11
+            review["review"] = "This is a great car dealer"
+            review["name"] = "Dust"
+            review["purchase"] = True
+            json_payload = dict()
+            json_payload["review"] = review
+            return post_request(url, json_payload, dealerId=dealer_id)
+        else:
+            # If not, return to login page again
+            return HttpResponse(render(request, 'djangoapp/login.html', context))
+    else:
+        return render(request, 'djangoapp/add_review.html', context)
