@@ -16,7 +16,7 @@ function main(params) {
                 _id: { "$gt": "0"},
                 st: { "$eq": params.state }
             },
-            fields: [ "id", "city", "state", "st", "address", "zip", "lat", "long" ]
+            fields: [ "id", "city", "state", "st", "address", "zip", "lat", "long", "short_name", "full_name" ]
         },
         
         function (err, result) {
@@ -46,7 +46,7 @@ function main(params) {
             selector: {
                 id: { "$eq": parseInt(params.id) }
             },
-            fields: [ "id", "city", "state", "st", "address", "zip", "lat", "long" ]
+            fields: [ "id", "city", "state", "st", "address", "zip", "lat", "long", "short_name", "full_name" ]
         },
         
         function (err, result) {
@@ -73,7 +73,7 @@ function main(params) {
           selector: {
             _id: { "$gt": "0"}
           },
-          fields: [ "id", "city", "state", "st", "address", "zip", "lat", "long" ]
+          fields: [ "id", "city", "state", "st", "address", "zip", "lat", "long", "short_name", "full_name" ]
       }, function (err, result) {
         if (err) {
           reject(err);
