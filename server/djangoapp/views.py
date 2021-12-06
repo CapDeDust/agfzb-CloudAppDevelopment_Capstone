@@ -114,14 +114,17 @@ def registration_request(request):
 #     if request.method == "GET":
 #         return render(request, 'djangoapp/index.html', context)
 def get_dealerships(request):
+    context = {}
     if request.method == "GET":
         url = "https://2f53ab0c.us-south.apigw.appdomain.cloud/dealerships/api/dealership"
         # Get dealers from the URL
-        dealerships = get_dealers_from_cf(url)
+        # dealerships = get_dealers_from_cf(url)
+        context["dealership_list"] = get_dealers_from_cf(url)
         # Concat all dealer's short name
-        dealer_names = ' '.join([dealer.short_name for dealer in dealerships])
+        # dealer_names = ' '.join([dealer.short_name for dealer in dealerships])
         # Return a list of dealer short name
-        return HttpResponse(dealer_names)
+        return render(request, 'djangoapp/index.html', context)
+        # return HttpResponse(dealer_names)
 
 def get_dealerships_by_id(request):
     if request.method == "GET":
@@ -134,19 +137,21 @@ def get_dealerships_by_id(request):
         return HttpResponse(dealer_names)
 
 def get_dealer_details(request, dealer_id):
+    context = {}
     if request.method == "GET":
         url = "https://2f53ab0c.us-south.apigw.appdomain.cloud/review/api/review"
         # Get reviews from the URL
-        reviews = get_dealer_reviews_from_cf(url, dealer_id)
-        reviews_comments = ' '.join([review.review for review in reviews])
+        context["reviews"] = get_dealer_reviews_from_cf(url, dealer_id)
+        # reviews = get_dealer_reviews_from_cf(url, dealer_id)
+        # reviews_comments = ' '.join([review.review for review in reviews])
         # TODO issues with 404 not found when calling ibm nlu
         # print('about to print reviews')
-        # print(reviews.__str__)
         # reviews_sentiments = ' '.join([review.sentiment for review in reviews])
-        return HttpResponse(reviews_comments)
+        # return HttpResponse(reviews_comments)
         # print('about to print review sentiments')
         # print(reviews_sentiments)
         # return HttpResponse(reviews_sentiments)
+        return render(request, 'djangoapp/dealer_details.html', context)
 
 # Create a `add_review` view to submit a review
 # def add_review(request, dealer_id):
@@ -172,6 +177,6 @@ def add_review(request, dealer_id):
             return post_request(url, json_payload, dealerId=dealer_id)
         else:
             # If not, return to login page again
-            return HttpResponse(render(request, 'djangoapp/login.html', context))
+            return render(request, 'djangoapp/login.html', context)
     else:
         return render(request, 'djangoapp/add_review.html', context)
