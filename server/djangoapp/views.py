@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 # from .models import related models
-from .restapis import get_dealers_from_cf, get_dealer_by_id_from_cf, get_dealer_reviews_from_cf, post_request
+from .restapis import get_dealers_from_cf, get_dealer_by_id_from_cf, get_dealer_reviews_from_cf, post_request, get_dealer_cars
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
 from datetime import datetime
@@ -36,14 +36,6 @@ def contact(request):
 
 
 # Create a `login_request` view to handle sign in request
-# def login_request(request):
-# ...
-# def login_request(request):
-#     context = {}
-#     if request.method == "GET":
-#         return render(request, 'djangoapp/login.html', context)
-
-
 def login_request(request):
     context = {}
     # Handles POST request
@@ -142,6 +134,7 @@ def get_dealer_details(request, dealer_id):
         url = "https://2f53ab0c.us-south.apigw.appdomain.cloud/review/api/review"
         # Get reviews from the URL
         context["reviews"] = get_dealer_reviews_from_cf(url, dealer_id)
+        context["dealer_id"] = dealer_id
         # reviews = get_dealer_reviews_from_cf(url, dealer_id)
         # reviews_comments = ' '.join([review.review for review in reviews])
         # TODO issues with 404 not found when calling ibm nlu
@@ -174,9 +167,12 @@ def add_review(request, dealer_id):
             review["purchase"] = True
             json_payload = dict()
             json_payload["review"] = review
-            return post_request(url, json_payload, dealerId=dealer_id)
+            post_request(url, json_payload, dealerId=dealer_id)
+            redirect("djangoapp:dealer_details", dealer_id=dealer_id)
         else:
             # If not, return to login page again
             return render(request, 'djangoapp/login.html', context)
-    else:
+    elif request.method == "GET":
+        # query cars
+        context["cars"] = get_dealer_cars(dealer_id)
         return render(request, 'djangoapp/add_review.html', context)

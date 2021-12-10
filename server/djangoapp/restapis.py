@@ -1,7 +1,7 @@
 import requests
 import json
 # import related models here
-from .models import CarDealer, DealerReview
+from .models import CarDealer, DealerReview, CarModel
 from requests.auth import HTTPBasicAuth
 
 
@@ -171,3 +171,6 @@ def get_dealer_reviews_from_cf(url, dealer_id):
             results.append(dealer_obj)
             
     return results
+
+def get_dealer_cars(dealer_id):
+    return CarModel.objects.filter(dealerId=dealer_id)
