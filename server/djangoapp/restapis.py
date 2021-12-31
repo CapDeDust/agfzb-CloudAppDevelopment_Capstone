@@ -105,31 +105,18 @@ def analyze_review_sentiments(dealerreview):
     url = "https://api.us-south.natural-language-understanding.watson.cloud.ibm.com/instances/4651b5cd-97f0-4feb-bbd3-6428a40e2724"
     api_key = "TAG05-_yHleAA6AJIMLB0BmJ-KApGlk2wEhPIFEl9LXA"
 
-
     # Call get_request with a URL parameter
     params = dict()
-
-    # params["text"] = kwargs["text"]
-    # params["version"] = kwargs["version"]
-    # params["features"] = kwargs["features"]
-    # params["return_analyzed_text"] = kwargs["return_analyzed_text"]
     params["api_key"] = api_key
     # params["text"] = kwargs["text"]
     # params["version"] = kwargs["version"]
     # params["features"] = kwargs["features"]
     # params["return_analyzed_text"] = kwargs["return_analyzed_text"]
+    # response = requests.get(url, params=params, headers={'Content-Type': 'application/json'},
+      #                              auth=HTTPBasicAuth('apikey', api_key))
 
     response = get_request(url, **params)
     return response
-    # if api_key:
-    #     # Basic authentication GET
-    #     response = get_request(url, params=params, headers={'Content-Type': 'application/json'}, auth=HTTPBasicAuth('apikey', api_key))
-    # else:
-    #     # no authentication GET
-    #     response = get_request(url, params=params, headers={'Content-Type': 'application/json'},)
-    # return response # = requests.get(url, params=params, headers={'Content-Type': 'application/json'},
-                            #auth=HTTPBasicAuth('apikey', api_key))
-
 
 def get_dealer_reviews_from_cf(url, dealer_id):
     results = []
@@ -145,30 +132,31 @@ def get_dealer_reviews_from_cf(url, dealer_id):
     json_result = get_request(url, dealerId=dealer_id)
     if json_result:
         # Get the row list in JSON as dealers
-        body = json_result["body"]
+        body = json_result.get("body")
         # For each dealer object
-        for review in body["reviews"]:
-            # Get its content in `doc` object
-            # dealer_doc = dealer["docs"]
-            dealer_doc = review
-            nluAnalyzedReview = analyze_review_sentiments(dealer_doc["review"])
-            print('nluAnalyzedReview is: ')
-            print(nluAnalyzedReview)
-            # Create a DealerReview object with values in `doc` object
-            dealer_obj = DealerReview(
-                dealership=dealer_doc["dealership"], 
-                name=dealer_doc["name"], 
-                purchase=dealer_doc["purchase"],
-                id=dealer_doc["id"], 
-                review=dealer_doc["review"], 
-                purchase_date=dealer_doc["purchase_date"],
-                car_make=dealer_doc["car_make"],
-                car_model=dealer_doc["car_model"], 
-                car_year=dealer_doc["car_year"],
-                sentiment=nluAnalyzedReview
-            )
-            # if (dealer_doc["id"] == dealer_id):
-            results.append(dealer_obj)
+        if body:
+            for review in body.get("reviews"):
+                # Get its content in `doc` object
+                # dealer_doc = dealer["docs"]
+                dealer_doc = review
+                nluAnalyzedReview = analyze_review_sentiments(dealer_doc.get("review",""))
+                print('nluAnalyzedReview is: ')
+                print(nluAnalyzedReview)
+                # Create a DealerReview object with values in `doc` object
+                dealer_obj = DealerReview(
+                    dealership=dealer_doc.get("dealership",""), 
+                    name=dealer_doc.get("name",""),
+                    purchase=dealer_doc.get("purchase",""),
+                    id=dealer_doc.get("id",""),
+                    review=dealer_doc.get("review",""), 
+                    purchase_date=dealer_doc.get("purchase_date",""),
+                    car_make=dealer_doc.get("car_make",""),
+                    car_model=dealer_doc.get("car_model",""),
+                    car_year=dealer_doc.get("car_year",""),
+                    sentiment=nluAnalyzedReview
+                )
+                # if (dealer_doc["id"] == dealer_id):
+                results.append(dealer_obj)
             
     return results
 

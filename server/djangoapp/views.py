@@ -161,10 +161,10 @@ def add_review(request, dealer_id):
             url = "https://2f53ab0c.us-south.apigw.appdomain.cloud/review/api/review"
             review = dict()
             review["time"] = datetime.utcnow().isoformat()
-            review["dealership"] = 11
-            review["review"] = "This is a great car dealer"
-            review["name"] = "Dust"
-            review["purchase"] = True
+            review["dealership"] = dealer_id
+            review["review"] = request.POST["content"]
+            review["name"] = username
+            review["purchase"] = request.POST["purchasecheck"]
             json_payload = dict()
             json_payload["review"] = review
             post_request(url, json_payload, dealerId=dealer_id)
@@ -174,5 +174,7 @@ def add_review(request, dealer_id):
             return render(request, 'djangoapp/login.html', context)
     elif request.method == "GET":
         # query cars
+        context["dealer_id"] = dealer_id
         context["cars"] = get_dealer_cars(dealer_id)
+        print(context)
         return render(request, 'djangoapp/add_review.html', context)
