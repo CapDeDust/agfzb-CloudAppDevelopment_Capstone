@@ -162,3 +162,6 @@ def get_dealer_reviews_from_cf(url, dealer_id):
 
 def get_dealer_cars(dealer_id):
     return CarModel.objects.filter(dealerId=dealer_id)
+
+def get_car_by_id(id):
+    return CarModel.objects.filter(id=id)

@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render, redirect
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 # from .models import related models
-from .restapis import get_dealers_from_cf, get_dealer_by_id_from_cf, get_dealer_reviews_from_cf, post_request, get_dealer_cars
+from .restapis import get_dealers_from_cf, get_dealer_by_id_from_cf, get_dealer_reviews_from_cf, post_request, get_dealer_cars, get_car_by_id
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
 from datetime import datetime
@@ -153,24 +153,31 @@ def get_dealer_details(request, dealer_id):
 def add_review(request, dealer_id):
     context = {}
     if request.method == "POST":
-        username = request.POST['username']
-        password = request.POST['psw']
-        # Try to check if provide credential can be authenticated
-        user = authenticate(username=username, password=password)
-        if user is not None:
+        if request.user.is_authenticated:
             url = "https://2f53ab0c.us-south.apigw.appdomain.cloud/review/api/review"
             review = dict()
             review["time"] = datetime.utcnow().isoformat()
-            review["dealership"] = dealer_id
+            review["id"] = dealer_id
             review["review"] = request.POST["content"]
-            review["name"] = username
-            review["purchase"] = request.POST["purchasecheck"]
+            review["name"] = request.user.username
+            if request.POST["purchasecheck"] == "on":
+                review["purchase"] = True
+            carId = request.POST["car"]
+            cars = get_car_by_id(carId)
+            for car in cars:
+                review["car_make"] = car.name
+                review["car_model"] = car.carMake.name
+                review["car_year"] = car.year.year
             json_payload = dict()
             json_payload["review"] = review
             post_request(url, json_payload, dealerId=dealer_id)
-            redirect("djangoapp:dealer_details", dealer_id=dealer_id)
+
+            context["dealer_id"] = dealer_id
+            context["reviews"] = get_dealer_reviews_from_cf(url, dealer_id)
+            return render(request, 'djangoapp/dealer_details.html', context)
+            #redirect("djangoapp:dealer_details", dealer_id=dealer_id)
         else:
-            # If not, return to login page again
+            # if not auth, return to login page again
             return render(request, 'djangoapp/login.html', context)
     elif request.method == "GET":
         # query cars
